@@ -32,7 +32,7 @@ const seed = async (): Promise<void> => {
         "Selim Reza",
         "selim@example.com",
         customerPassword,
-        "01711111111",
+        "01707453950",
         "customer",
       ],
     );

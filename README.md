@@ -1,243 +1,124 @@
-# 🚗 Vehicle Rental System API
 
-A backend REST API for a vehicle rental management system built with Node.js, TypeScript, Express.js, and PostgreSQL.
 
----
+```markdown
+#  Premium Vehicle Rental System
 
-## 🛠️ Technology Stack
-
-- **Node.js** + **TypeScript**
-- **Express.js** – Web framework
-- **PostgreSQL** – Database
-- **bcrypt** – Password hashing
-- **jsonwebtoken** – JWT authentication
+A production-ready, high-performance REST API for a Vehicle Rental Management System. Built with **Node.js**, **Express**, and **PostgreSQL**, using **Prisma ORM** for type-safe database interactions and **NeonDB** for cloud-scale performance.
 
 ---
 
-## 📁 Project Structure
+## 🌟 Key Features
 
-```
+-    **Advanced Authentication**: JWT-based auth with Access & Refresh token rotation and bcrypt password hashing.
+-    **Role-Based Access Control (RBAC)**: Distinct permissions for **Admins** and **Customers**.
+-    **Dynamic Fleet Management**: Complete CRUD for vehicles with advanced filtering (brand, type, price range).
+-    **Smart Booking System**: Real-time availability checking, transaction-safe booking, and automatic price calculation.
+-    **Admin Dashboard**: Live statistics for total revenue, active bookings, and fleet utilization.
+-   **Review System**: Customers can rate and review vehicles after their rental.
+-   **Newsletter Integration**: Seamless email subscription for marketing and updates.
+-   **Seed System**: Instant database population with rich test data for development.
+
+---
+
+##   Tech Stack
+
+-   **Runtime**: [Node.js](https://nodejs.org/) (v18+)
+-   **Language**: [TypeScript](https://www.typescriptlang.org/)
+-   **Framework**: [Express.js](https://expressjs.com/)
+-   **Database**: [PostgreSQL](https://www.postgresql.org/) (Hosted on [Neon](https://neon.tech/))
+-   **ORM**: [Prisma](https://www.prisma.io/)
+-   **Security**: [JWT](https://jwt.io/), [bcrypt](https://github.com/kelektiv/node.bcrypt.js)
+-   **Dev Tools**: [ts-node-dev](https://github.com/wclr/ts-node-dev), [Postman](https://www.postman.com/)
+
+---
+
+##  Project Structure
+
+```text
 src/
-├── config/
-│   ├── database.ts        # PostgreSQL connection pool
-│   └── jwt.ts             # JWT configuration
-├── db/
-│   └── migrate.ts         # Database migration script
-├── middlewares/
-│   ├── auth.middleware.ts  # JWT auth + role authorization
-│   └── error.middleware.ts # Global error handler
-├── modules/
-│   ├── auth/
-│   │   ├── auth.service.ts
-│   │   ├── auth.controller.ts
-│   │   └── auth.routes.ts
-│   ├── users/
-│   │   ├── users.service.ts
-│   │   ├── users.controller.ts
-│   │   └── users.routes.ts
-│   ├── vehicles/
-│   │   ├── vehicles.service.ts
-│   │   ├── vehicles.controller.ts
-│   │   └── vehicles.routes.ts
-│   └── bookings/
-│       ├── bookings.service.ts
-│       ├── bookings.controller.ts
-│       └── bookings.routes.ts
-├── app.ts                 # Express app setup
-└── server.ts              # Entry point
+├── config/             # DB Pool, Prisma Client, JWT settings
+├── db/                 # Migration & Seed scripts
+├── middlewares/        # Auth, Role guards, Error handling
+├── modules/            # Domain-driven modules
+│   ├── auth/           # Login, Signup, Token Refresh
+│   ├── users/          # Profile & User management
+│   ├── vehicles/       # Fleet & Filtering
+│   ├── bookings/       # Rental logic & Transactions
+│   ├── reviews/        # Vehicle feedback
+│   ├── newsletter/     # Email subscriptions
+│   └── dashboard/      # Admin analytics
+├── app.ts              # App configuration
+└── server.ts           # Entry point
 ```
 
 ---
 
-## 🚀 Setup Instructions
+## 🚀 Getting Started
 
-### 1. Clone and Install Dependencies
-
+### 1. Installation
 ```bash
-cd vehicle-rental-system
+git clone https://github.com/your-username/vehicle-rental.git
+cd vehicle-rental
 npm install
 ```
 
-### 2. Configure Environment Variables
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` with your PostgreSQL credentials:
-
+### 2. Environment Setup
+Create a `.env` file in the root directory:
 ```env
 PORT=5000
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=vehicle_rental
-DB_USER=postgres
-DB_PASSWORD=yourpassword
-JWT_SECRET=your_super_secret_jwt_key_here
-JWT_EXPIRES_IN=7d
+DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
+JWT_SECRET="your_secret_key"
 ```
 
-### 3. Create PostgreSQL Database
-
-```sql
-CREATE DATABASE vehicle_rental;
-```
-
-### 4. Run Database Migration
-
+### 3. Database Initialization
 ```bash
-npm run db:migrate
-```
+# Push schema to NeonDB
+npx prisma db push
 
-### 5. (Optional) Seed Sample Data
+# Generate Prisma Client
+npm run prisma:generate
 
-```bash
+# Seed the database with test data
 npm run db:seed
 ```
 
-This creates ready-to-use test accounts:
-- **Admin:** admin@vehiclerental.com / admin123
-- **Customer:** john@example.com / customer123
-- **4 sample vehicles** (car, bike, van, SUV)
-
-### 6. Start Development Server
-
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
 
-### 7. Build for Production
+---
 
-```bash
-npm run build
-npm start
-```
+## 🧪 Testing with Postman
+
+1. Import the `VehicleRental.postman_collection.json` file into Postman.
+2. The collection includes **pre-request scripts** that automatically handle authentication tokens.
+3. Test credentials (created via `npm run db:seed`):
+    - **Admin**: `mdselimreza2066@gmail.com` / `admin123`
+    - **Customer**: `selim@example.com` / `selim123`
 
 ---
 
-## 🌐 API Endpoints
+## 🌐 API Overview
 
-### Auth (Public)
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/v1/auth/signup` | Register new user |
-| POST | `/api/v1/auth/signin` | Login, receive JWT |
-
-### Vehicles
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/v1/vehicles` | Admin | Add new vehicle |
-| GET | `/api/v1/vehicles` | Public | Get all vehicles |
-| GET | `/api/v1/vehicles/:vehicleId` | Public | Get vehicle by ID |
-| PUT | `/api/v1/vehicles/:vehicleId` | Admin | Update vehicle |
-| DELETE | `/api/v1/vehicles/:vehicleId` | Admin | Delete vehicle |
-
-### Users
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| GET | `/api/v1/users` | Admin | Get all users |
-| PUT | `/api/v1/users/:userId` | Admin/Own | Update user |
-| DELETE | `/api/v1/users/:userId` | Admin | Delete user |
-
-### Bookings
-| Method | Endpoint | Access | Description |
-|--------|----------|--------|-------------|
-| POST | `/api/v1/bookings` | Auth | Create booking |
-| GET | `/api/v1/bookings` | Auth | Get bookings (role-based) |
-| PUT | `/api/v1/bookings/:bookingId` | Auth | Cancel/Return booking |
+| Method | Endpoint | Description | Access |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/v1/auth/signin` | User Login (Returns tokens) | Public |
+| `GET` | `/api/v1/vehicles` | List & Filter Vehicles | Public |
+| `POST` | `/api/v1/bookings` | Create a New Booking | Auth |
+| `GET` | `/api/v1/dashboard/stats` | Get Admin Analytics | Admin |
+| `POST` | `/api/v1/reviews` | Submit Vehicle Review | Customer |
 
 ---
 
-## 🔐 Authentication
+##  Business Logic & Validation
 
-Include the JWT token in the `Authorization` header:
-
-```
-Authorization: Bearer <token>
-```
-
----
-
-## 📋 Example Requests
-
-### Register a User
-```json
-POST /api/v1/auth/signup
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "password123",
-  "phone": "01711000000",
-  "role": "customer"
-}
-```
-
-### Login
-```json
-POST /api/v1/auth/signin
-{
-  "email": "john@example.com",
-  "password": "password123"
-}
-```
-
-### Create a Vehicle (Admin)
-```json
-POST /api/v1/vehicles
-Authorization: Bearer <admin_token>
-{
-  "vehicle_name": "Toyota Camry",
-  "type": "car",
-  "registration_number": "DHK-1234",
-  "daily_rent_price": 2500,
-  "availability_status": "available"
-}
-```
-
-### Create a Booking
-```json
-POST /api/v1/bookings
-Authorization: Bearer <customer_token>
-{
-  "vehicle_id": 1,
-  "rent_start_date": "2025-02-01",
-  "rent_end_date": "2025-02-05"
-}
-```
-> Total price is automatically calculated: 4 days × 2500 = 10,000
+-   **Atomic Bookings**: Uses Prisma transactions to ensure vehicles aren't double-booked.
+-   **Price Engine**: Automatically calculates total rent based on `daily_rent_price` and date range.
+-   **Security**: Password hashing via `bcrypt` and protected routes via JWT middleware.
+-   **Sanitization**: All inputs are validated and sanitized before reaching the database.
 
 ---
 
-## ✅ Business Logic
-
-- Passwords are hashed with bcrypt before storage
-- JWT tokens expire in 7 days by default
-- Vehicle availability is checked and locked (transaction) when booking
-- Total price = `daily_rent_price × number of days`
-- Customers can only cancel bookings **before** the start date
-- Admins can mark bookings as **returned** (vehicle becomes available again)
-- Expired bookings are auto-returned every hour on server startup
-- Deleting a user or vehicle with active bookings is blocked
-
----
-
-## 🧪 Postman Collection
-
-Import `VehicleRental.postman_collection.json` into Postman.
-
-The collection includes all endpoints with pre-set body examples. After running **Signin (Admin)** or **Signin (Customer)**, the token is automatically saved as a collection variable and used in all subsequent requests.
-
----
-
-## ⚙️ Response Format
-
-All responses follow a consistent structure:
-
-```json
-{
-  "success": true | false,
-  "message": "...",
-  "data": { ... }
-}
+Author [MdSelim Reza](https://github.com/selim2066)
 ```
-# vehicle_rental_management

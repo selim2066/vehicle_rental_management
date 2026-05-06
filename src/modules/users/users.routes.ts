@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { getAllUsers, updateUser, deleteUser } from './users.controller';
+import { getMe, updateMe, getAllUsers, updateUser, deleteUser } from './users.controller';
 import { authenticate, authorizeAdmin } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
-// GET /api/v1/users — Admin only
+// Profile routes
+router.get('/me', authenticate, getMe);
+router.put('/me', authenticate, updateMe);
+
+// Admin routes
 router.get('/', authenticate, authorizeAdmin, getAllUsers);
-
-// PUT /api/v1/users/:userId — Admin or own customer
-router.put('/:userId', authenticate, updateUser);
-
-// DELETE /api/v1/users/:userId — Admin only
+router.put('/:userId', authenticate, authorizeAdmin, updateUser);
 router.delete('/:userId', authenticate, authorizeAdmin, deleteUser);
 
 export default router;

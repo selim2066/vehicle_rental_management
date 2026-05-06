@@ -1,22 +1,26 @@
 import { Router } from 'express';
-import { createVehicle, getAllVehicles, getVehicleById, updateVehicle, deleteVehicle } from './vehicles.controller';
+import {
+  createVehicle,
+  getAllVehicles,
+  getVehicleById,
+  updateVehicle,
+  deleteVehicle,
+  getFeaturedVehicles,
+  getRelatedVehicles,
+} from './vehicles.controller';
 import { authenticate, authorizeAdmin } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
-// POST /api/v1/vehicles — Admin only
-router.post('/', authenticate, authorizeAdmin, createVehicle);
-
-// GET /api/v1/vehicles — Public
+// Public routes
 router.get('/', getAllVehicles);
-
-// GET /api/v1/vehicles/:vehicleId — Public
+router.get('/featured', getFeaturedVehicles);
 router.get('/:vehicleId', getVehicleById);
+router.get('/:vehicleId/related', getRelatedVehicles);
 
-// PUT /api/v1/vehicles/:vehicleId — Admin only
+// Admin routes
+router.post('/', authenticate, authorizeAdmin, createVehicle);
 router.put('/:vehicleId', authenticate, authorizeAdmin, updateVehicle);
-
-// DELETE /api/v1/vehicles/:vehicleId — Admin only
 router.delete('/:vehicleId', authenticate, authorizeAdmin, deleteVehicle);
 
 export default router;

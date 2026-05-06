@@ -3,47 +3,40 @@ import {
   createBookingService,
   getAllBookingsService,
   updateBookingService,
+  getBookingByIdService,
 } from './bookings.service';
 
-export const createBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const createBooking = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { vehicle_id, rent_start_date, rent_end_date } = req.body;
-
-    if (!vehicle_id || !rent_start_date || !rent_end_date) {
-      res.status(400).json({ success: false, message: 'vehicle_id, rent_start_date, and rent_end_date are required.' });
-      return;
-    }
-
-    const customerId = req.user!.id;
-    const booking = await createBookingService(customerId, {
-      vehicle_id: Number(vehicle_id),
-      rent_start_date,
-      rent_end_date,
-    });
-
+    const booking = await createBookingService(req.user!.id, req.body);
     res.status(201).json({ success: true, message: 'Booking created successfully.', data: booking });
   } catch (err) {
     next(err);
   }
 };
 
-export const getAllBookings = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getAllBookings = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const bookings = await getAllBookingsService(req.user!.id, req.user!.role);
-    res.status(200).json({ success: true, data: bookings });
+    const result = await getAllBookingsService(req.user!.id, req.user!.role, req.query);
+    res.status(200).json({ success: true, ...result });
   } catch (err) {
     next(err);
   }
 };
 
-export const updateBooking = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const getBookingById = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const bookingId = parseInt(req.params.bookingId, 10);
-    if (isNaN(bookingId)) {
-      res.status(400).json({ success: false, message: 'Invalid booking ID.' });
-      return;
-    }
+    const booking = await getBookingByIdService(bookingId, req.user!.id, req.user!.role);
+    res.status(200).json({ success: true, data: booking });
+  } catch (err) {
+    next(err);
+  }
+};
 
+export const updateBooking = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const bookingId = parseInt(req.params.bookingId, 10);
     const booking = await updateBookingService(bookingId, req.user!.id, req.user!.role);
     res.status(200).json({ success: true, message: 'Booking updated successfully.', data: booking });
   } catch (err) {

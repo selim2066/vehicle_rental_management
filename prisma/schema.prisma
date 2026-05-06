@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model bookings {
+  id              Int       @id @default(autoincrement())
+  customer_id     Int
+  vehicle_id      Int
+  rent_start_date DateTime  @db.Date
+  rent_end_date   DateTime  @db.Date
+  total_price     Decimal   @db.Decimal(10, 2)
+  status          String    @default("active") @db.VarChar(20)
+  created_at      DateTime  @default(now()) @db.Timestamp(6)
+  updated_at      DateTime  @default(now()) @db.Timestamp(6)
+  users           users     @relation(fields: [customer_id], references: [id], onUpdate: NoAction)
+  vehicles        vehicles  @relation(fields: [vehicle_id], references: [id], onUpdate: NoAction)
+  reviews         reviews[]
+
+  @@index([customer_id], map: "idx_bookings_customer_id")
+  @@index([status], map: "idx_bookings_status")
+  @@index([vehicle_id], map: "idx_bookings_vehicle_id")
+}
+
+model newsletter_subscribers {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique @db.VarChar(255)
+  subscribed_at DateTime @default(now()) @db.Timestamp(6)
+}
+
+model refresh_tokens {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token      String   @unique
+  expires_at DateTime @db.Timestamp(6)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([token], map: "idx_refresh_tokens_token")
+  @@index([user_id], map: "idx_refresh_tokens_user_id")
+}
+
+model reviews {
+  id         Int       @id @default(autoincrement())
+  vehicle_id Int
+  user_id    Int
+  booking_id Int?
+  rating     Int
+  comment    String?
+  created_at DateTime  @default(now()) @db.Timestamp(6)
+  updated_at DateTime  @default(now()) @db.Timestamp(6)
+  bookings   bookings? @relation(fields: [booking_id], references: [id], onUpdate: NoAction)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  vehicles   vehicles  @relation(fields: [vehicle_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([vehicle_id, user_id], map: "reviews_vehicle_user_unique")
+  @@index([user_id], map: "idx_reviews_user_id")
+  @@index([vehicle_id], map: "idx_reviews_vehicle_id")
+}
+
+model users {
+  id             Int              @id @default(autoincrement())
+  name           String           @db.VarChar(255)
+  email          String           @unique @db.VarChar(255)
+  password       String           @db.VarChar(255)
+  phone          String           @db.VarChar(50)
+  role           String           @default("customer") @db.VarChar(20)
+  created_at     DateTime         @default(now()) @db.Timestamp(6)
+  updated_at     DateTime         @default(now()) @db.Timestamp(6)
+  avatar         String?          @db.VarChar(500)
+  bio            String?
+  address        String?
+  is_active      Boolean          @default(true)
+  google_id      String?          @unique @db.VarChar(255)
+  bookings       bookings[]
+  refresh_tokens refresh_tokens[]
+  reviews        reviews[]
+}
+
+model vehicle_features {
+  id         Int      @id @default(autoincrement())
+  vehicle_id Int
+  feature    String   @db.VarChar(255)
+  vehicles   vehicles @relation(fields: [vehicle_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([vehicle_id], map: "idx_vehicle_features_vehicle_id")
+}
+
+model vehicle_images {
+  id         Int      @id @default(autoincrement())
+  vehicle_id Int
+  image_url  String   @db.VarChar(500)
+  is_primary Boolean  @default(false)
+  sort_order Int      @default(0)
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  vehicles   vehicles @relation(fields: [vehicle_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([vehicle_id], map: "idx_vehicle_images_vehicle_id")
+}
+
+model vehicles {
+  id                  Int                @id @default(autoincrement())
+  vehicle_name        String             @db.VarChar(255)
+  type                String             @db.VarChar(20)
+  registration_number String             @unique @db.VarChar(100)
+  daily_rent_price    Decimal            @db.Decimal(10, 2)
+  availability_status String             @default("available") @db.VarChar(20)
+  created_at          DateTime           @default(now()) @db.Timestamp(6)
+  updated_at          DateTime           @default(now()) @db.Timestamp(6)
+  description         String?
+  brand               String?            @db.VarChar(100)
+  model               String?            @db.VarChar(100)
+  year                Int?
+  color               String?            @db.VarChar(50)
+  seats               Int?
+  fuel_type           String?            @db.VarChar(30)
+  transmission        String?            @db.VarChar(20)
+  mileage             Decimal?           @db.Decimal(10, 2)
+  location            String?            @db.VarChar(255)
+  is_featured         Boolean            @default(false)
+  bookings            bookings[]
+  reviews             reviews[]
+  vehicle_features    vehicle_features[]
+  vehicle_images      vehicle_images[]
+
+  @@index([availability_status], map: "idx_vehicles_availability")
+  @@index([is_featured], map: "idx_vehicles_is_featured")
+  @@index([type], map: "idx_vehicles_type")
+}

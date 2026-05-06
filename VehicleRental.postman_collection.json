@@ -1,13 +1,14 @@
 {
   "info": {
-    "name": "Vehicle Rental System API",
-    "description": "Complete API collection for the Vehicle Rental System assignment.",
+    "name": "Vehicle Rental System V2 API",
+    "description": "Complete API collection for the Premium Vehicle Rental System with Prisma and extended modules.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:5000/api/v1", "type": "string" },
     { "key": "adminToken", "value": "", "type": "string" },
-    { "key": "customerToken", "value": "", "type": "string" }
+    { "key": "customerToken", "value": "", "type": "string" },
+    { "key": "refreshToken", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -28,19 +29,7 @@
             "url": "{{baseUrl}}/auth/signup",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Jane Smith\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"01722222222\",\n  \"role\": \"customer\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Signup (Admin)",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "url": "{{baseUrl}}/auth/signup",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@vehiclerental.com\",\n  \"password\": \"admin123\",\n  \"phone\": \"01700000000\",\n  \"role\": \"admin\"\n}"
+              "raw": "{\n  \"name\": \"Selim Reza\",\n  \"email\": \"selim@example.com\",\n  \"password\": \"selim123\",\n  \"phone\": \"01707453950\",\n  \"role\": \"customer\"\n}"
             }
           }
         },
@@ -52,9 +41,10 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res.data && res.data.token) {",
-                  "  pm.collectionVariables.set('adminToken', res.data.token);",
-                  "  console.log('Admin token saved.');",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('adminToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "  console.log('Admin tokens saved.');",
                   "}"
                 ]
               }
@@ -78,9 +68,10 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res.data && res.data.token) {",
-                  "  pm.collectionVariables.set('customerToken', res.data.token);",
-                  "  console.log('Customer token saved.');",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('customerToken', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', res.data.refreshToken);",
+                  "  console.log('Customer tokens saved.');",
                   "}"
                 ]
               }
@@ -92,7 +83,31 @@
             "url": "{{baseUrl}}/auth/signin",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"customer123\"\n}"
+              "raw": "{\n  \"email\": \"selim@example.com\",\n  \"password\": \"selim123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/refresh",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{refreshToken}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Signout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/signout",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{refreshToken}}\"\n}"
             }
           }
         }
@@ -102,17 +117,42 @@
       "name": "Vehicles",
       "item": [
         {
-          "name": "Get All Vehicles (Public)",
+          "name": "Get All Vehicles (with Filters)",
           "request": {
             "method": "GET",
-            "url": "{{baseUrl}}/vehicles"
+            "url": {
+              "raw": "{{baseUrl}}/vehicles?type=car&brand=Toyota&minPrice=1000&maxPrice=5000&sort=price_asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["vehicles"],
+              "query": [
+                { "key": "type", "value": "car" },
+                { "key": "brand", "value": "Toyota" },
+                { "key": "minPrice", "value": "1000" },
+                { "key": "maxPrice", "value": "5000" },
+                { "key": "sort", "value": "price_asc" }
+              ]
+            }
           }
         },
         {
-          "name": "Get Vehicle by ID (Public)",
+          "name": "Get Featured Vehicles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/vehicles/featured"
+          }
+        },
+        {
+          "name": "Get Vehicle Details (with Images/Features)",
           "request": {
             "method": "GET",
             "url": "{{baseUrl}}/vehicles/1"
+          }
+        },
+        {
+          "name": "Get Related Vehicles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/vehicles/1/related"
           }
         },
         {
@@ -126,33 +166,8 @@
             "url": "{{baseUrl}}/vehicles",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vehicle_name\": \"Toyota Camry 2023\",\n  \"type\": \"car\",\n  \"registration_number\": \"DHK-CA-2023\",\n  \"daily_rent_price\": 2500,\n  \"availability_status\": \"available\"\n}"
+              "raw": "{\n  \"vehicle_name\": \"Tesla Model 3 2024\",\n  \"type\": \"car\",\n  \"brand\": \"Tesla\",\n  \"model\": \"Model 3\",\n  \"year\": 2024,\n  \"registration_number\": \"DHK-EV-2024\",\n  \"daily_rent_price\": 8000,\n  \"availability_status\": \"available\",\n  \"fuel_type\": \"electric\",\n  \"transmission\": \"automatic\",\n  \"seats\": 5,\n  \"is_featured\": true,\n  \"images\": [\"https://example.com/tesla.jpg\"],\n  \"features\": [\"Autopilot\", \"Glass Roof\"]\n}"
             }
-          }
-        },
-        {
-          "name": "Update Vehicle (Admin)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/vehicles/1",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"daily_rent_price\": 3000,\n  \"availability_status\": \"available\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Delete Vehicle (Admin)",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/vehicles/1"
           }
         }
       ]
@@ -161,53 +176,34 @@
       "name": "Users",
       "item": [
         {
-          "name": "Get All Users (Admin)",
+          "name": "Get My Profile",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/users"
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": "{{baseUrl}}/users/me"
           }
         },
         {
-          "name": "Update User (Admin)",
-          "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/users/2",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"phone\": \"01799999999\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Update Own Profile (Customer)",
+          "name": "Update My Profile",
           "request": {
             "method": "PUT",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
               { "key": "Authorization", "value": "Bearer {{customerToken}}" }
             ],
-            "url": "{{baseUrl}}/users/2",
+            "url": "{{baseUrl}}/users/me",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"phone\": \"01711111111\"\n}"
+              "raw": "{\n  \"bio\": \"Vroom vroom!\",\n  \"address\": \"Dhaka, Bangladesh\"\n}"
             }
           }
         },
         {
-          "name": "Delete User (Admin)",
+          "name": "Get All Users (Admin)",
           "request": {
-            "method": "DELETE",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/users/2"
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/users"
           }
         }
       ]
@@ -216,7 +212,7 @@
       "name": "Bookings",
       "item": [
         {
-          "name": "Create Booking (Customer)",
+          "name": "Create Booking",
           "request": {
             "method": "POST",
             "header": [
@@ -226,48 +222,81 @@
             "url": "{{baseUrl}}/bookings",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"vehicle_id\": 1,\n  \"rent_start_date\": \"2025-05-01\",\n  \"rent_end_date\": \"2025-05-05\"\n}"
+              "raw": "{\n  \"vehicle_id\": 1,\n  \"rent_start_date\": \"2025-06-01\",\n  \"rent_end_date\": \"2025-06-05\"\n}"
             }
           }
         },
         {
-          "name": "Get All Bookings (Admin - sees all)",
+          "name": "Get All Bookings (Admin)",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
             "url": "{{baseUrl}}/bookings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Submit Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "url": "{{baseUrl}}/reviews",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_id\": 1,\n  \"rating\": 5,\n  \"comment\": \"Excellent car, very smooth!\"\n}"
+            }
           }
         },
         {
-          "name": "Get My Bookings (Customer - own only)",
+          "name": "Get Vehicle Reviews",
           "request": {
             "method": "GET",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
-            ],
-            "url": "{{baseUrl}}/bookings"
+            "url": "{{baseUrl}}/reviews/vehicle/1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get Admin Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/dashboard/stats"
           }
         },
         {
-          "name": "Cancel Booking (Customer)",
+          "name": "Get Revenue Chart",
           "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
-            ],
-            "url": "{{baseUrl}}/bookings/1"
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/dashboard/revenue"
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "Newsletter",
+      "item": [
         {
-          "name": "Return Booking (Admin)",
+          "name": "Subscribe",
           "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{adminToken}}" }
-            ],
-            "url": "{{baseUrl}}/bookings/1"
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/newsletter/subscribe",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            }
           }
         }
       ]

@@ -1,95 +1,111 @@
 import bcrypt from 'bcrypt';
-import pool from '../../config/database';
+import prisma from '../../config/prisma';
 
-export const getAllUsersService = async () => {
-  const result = await pool.query(
-    'SELECT id, name, email, phone, role, created_at, updated_at FROM users ORDER BY id ASC'
-  );
-  return result.rows;
+export const getAllUsersService = async (query: any) => {
+  const { page = 1, limit = 10, search } = query;
+  const skip = (Number(page) - 1) * Number(limit);
+  const take = Number(limit);
+
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+    ];
+  }
+
+  const [users, total] = await Promise.all([
+    prisma.users.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatar: true,
+        is_active: true,
+        created_at: true,
+      },
+      skip,
+      take,
+      orderBy: { created_at: 'desc' },
+    }),
+    prisma.users.count({ where }),
+  ]);
+
+  return {
+    users,
+    meta: {
+      total,
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / Number(limit)),
+    },
+  };
 };
 
-export const updateUserService = async (
-  userId: number,
-  requesterId: number,
-  requesterRole: string,
-  data: Partial<{ name: string; email: string; password: string; phone: string; role: string }>
-) => {
-  // Customers can only update themselves
-  if (requesterRole === 'customer' && userId !== requesterId) {
-    const err: any = new Error('Forbidden. You can only update your own profile.');
-    err.statusCode = 403;
-    throw err;
-  }
+export const getUserByIdService = async (id: number) => {
+  const user = await prisma.users.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      avatar: true,
+      bio: true,
+      address: true,
+      is_active: true,
+      created_at: true,
+    },
+  });
 
-  // Customers cannot change their own role
-  if (requesterRole === 'customer' && data.role) {
-    const err: any = new Error('Forbidden. Customers cannot change their role.');
-    err.statusCode = 403;
-    throw err;
-  }
-
-  // Check user exists
-  const existing = await pool.query(
-    'SELECT id FROM users WHERE id = $1',
-    [userId]
-  );
-  if (existing.rows.length === 0) {
+  if (!user) {
     const err: any = new Error('User not found.');
     err.statusCode = 404;
     throw err;
   }
 
-  const fields: string[] = [];
-  const values: any[] = [];
-  let idx = 1;
+  return user;
+};
 
-  if (data.name) { fields.push(`name = $${idx++}`); values.push(data.name); }
-  if (data.email) { fields.push(`email = $${idx++}`); values.push(data.email.toLowerCase()); }
-  if (data.phone) { fields.push(`phone = $${idx++}`); values.push(data.phone); }
-  if (data.role && requesterRole === 'admin') { fields.push(`role = $${idx++}`); values.push(data.role); }
+export const updateUserService = async (id: number, data: any) => {
   if (data.password) {
-    const hashed = await bcrypt.hash(data.password, 10);
-    fields.push(`password = $${idx++}`);
-    values.push(hashed);
+    data.password = await bcrypt.hash(data.password, 10);
   }
 
-  if (fields.length === 0) {
-    const err: any = new Error('No valid fields to update.');
-    err.statusCode = 400;
-    throw err;
-  }
-
-  fields.push(`updated_at = NOW()`);
-  values.push(userId);
-
-  const result = await pool.query(
-    `UPDATE users SET ${fields.join(', ')} WHERE id = $${idx}
-     RETURNING id, name, email, phone, role, created_at, updated_at`,
-    values
-  );
-
-  return result.rows[0];
+  return await prisma.users.update({
+    where: { id },
+    data,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      avatar: true,
+      bio: true,
+      address: true,
+      is_active: true,
+    },
+  });
 };
 
-export const deleteUserService = async (userId: number) => {
-  // Check user exists
-  const existing = await pool.query('SELECT id FROM users WHERE id = $1', [userId]);
-  if (existing.rows.length === 0) {
-    const err: any = new Error('User not found.');
-    err.statusCode = 404;
-    throw err;
-  }
+export const deleteUserService = async (id: number) => {
+  const activeBookings = await prisma.bookings.count({
+    where: { customer_id: id, status: 'active' },
+  });
 
-  // Check no active bookings
-  const activeBookings = await pool.query(
-    `SELECT id FROM bookings WHERE customer_id = $1 AND status = 'active'`,
-    [userId]
-  );
-  if (activeBookings.rows.length > 0) {
+  if (activeBookings > 0) {
     const err: any = new Error('Cannot delete user with active bookings.');
     err.statusCode = 400;
     throw err;
   }
 
-  await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+  return await prisma.users.update({
+    where: { id },
+    data: { is_active: false }, // Soft delete/deactivate
+  });
 };

@@ -53,8 +53,8 @@ export const getAllVehiclesService = async (query: any) => {
     ];
   }
 
-  if (type) where.type = type;
-  if (brand) where.brand = brand;
+  if (type) where.type = { equals: type, mode: 'insensitive' };
+  if (brand) where.brand = { equals: brand, mode: 'insensitive' };
   if (fuel_type) where.fuel_type = fuel_type;
   if (transmission) where.transmission = transmission;
   if (availability) where.availability_status = availability;

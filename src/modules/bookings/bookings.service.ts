@@ -71,7 +71,16 @@ export const getAllBookingsService = async (requesterId: number, requesterRole: 
       where,
       include: {
         users: { select: { name: true, email: true } },
-        vehicles: { select: { vehicle_name: true, registration_number: true } },
+        vehicles: { 
+          select: { 
+            vehicle_name: true, 
+            registration_number: true,
+            vehicle_images: {
+              where: { is_primary: true },
+              take: 1
+            }
+          } 
+        },
       },
       skip,
       take,
@@ -96,7 +105,18 @@ export const getBookingByIdService = async (id: number, requesterId: number, req
     where: { id },
     include: {
       users: { select: { id: true, name: true, email: true, phone: true } },
-      vehicles: { select: { id: true, vehicle_name: true, type: true, registration_number: true } },
+      vehicles: { 
+        select: { 
+          id: true, 
+          vehicle_name: true, 
+          type: true, 
+          registration_number: true,
+          vehicle_images: {
+            where: { is_primary: true },
+            take: 1
+          }
+        } 
+      },
     },
   });
 

@@ -27,7 +27,7 @@ const createTables = async (): Promise<void> => {
         id                    SERIAL PRIMARY KEY,
         vehicle_name          VARCHAR(255)    NOT NULL,
         type                  VARCHAR(20)     NOT NULL
-                              CHECK (type IN ('car', 'bike', 'van', 'SUV')),
+                              CHECK (type IN ('car', 'bike', 'van', 'SUV', 'suv', 'sports', 'luxury', 'sedan', 'electric', 'coupe', 'truck')),
         registration_number   VARCHAR(100)    NOT NULL UNIQUE,
         daily_rent_price      NUMERIC(10, 2)  NOT NULL CHECK (daily_rent_price > 0),
         availability_status   VARCHAR(20)     NOT NULL DEFAULT 'available'

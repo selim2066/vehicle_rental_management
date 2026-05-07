@@ -11,7 +11,8 @@
     "db:seed": "ts-node src/db/seed.ts",
     "prisma:generate": "prisma generate",
     "prisma:pull": "prisma db pull",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "db:fix-types": "ts-node src/db/fix-type-constraint.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.12.1",

@@ -41,7 +41,7 @@ export const generateTokens = (user: { id: number; email: string; role: string }
   const accessToken = jwt.sign(
     { id: user.id, email: user.email, role: user.role },
     jwtConfig.secret,
-    { expiresIn: '15m' } // Short lived access token
+    { expiresIn: '7d' } // Increased for better UX
   );
 
   const refreshToken = jwt.sign(
